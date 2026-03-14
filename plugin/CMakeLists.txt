@@ -37,6 +37,7 @@ target_sources(FurnitureVST
         Source/Engine/Collision.cpp
         Source/Engine/Scales.cpp
         Source/Engine/PhysicsEngine.cpp
+        Source/Engine/Arp.cpp
         Source/GUI/SimulationCanvas.cpp
         Source/GUI/Sidebar.cpp
 )

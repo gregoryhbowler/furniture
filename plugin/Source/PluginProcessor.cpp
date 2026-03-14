@@ -44,6 +44,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout FurnitureProcessor::createPa
     params.push_back(std::make_unique<juce::AudioParameterInt>("randomOctaveAmount",  "Oct Amount",     1, 3, 1));
     params.push_back(std::make_unique<juce::AudioParameterInt>("randomVelocity",      "Rnd Velocity",   0, 100, 0));
 
+    // Arpeggiator
+    params.push_back(std::make_unique<juce::AudioParameterBool>("arpEnabled",   "Arp",          false));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("arpSync",      "Arp Sync",     true));
+    params.push_back(std::make_unique<juce::AudioParameterInt>("arpDivision",   "Arp Division", 0, 11, 5));  // default 1/8
+    params.push_back(std::make_unique<juce::AudioParameterInt>("arpRateMs",     "Arp Rate",     10, 4000, 200));
+    params.push_back(std::make_unique<juce::AudioParameterInt>("arpPlayMode",   "Arp Mode",     0, 7, 1));   // default Up
+    params.push_back(std::make_unique<juce::AudioParameterBool>("arpPendulum",  "Arp Pendulum", false));
+    params.push_back(std::make_unique<juce::AudioParameterInt>("arpRatchet",    "Arp Ratchet",  0, 16, 0));
+
     return { params.begin(), params.end() };
 }
 
@@ -70,6 +79,15 @@ void FurnitureProcessor::pullParametersFromAPVTS()
     persistentState.randomOctaveChance = static_cast<int>(*apvts.getRawParameterValue("randomOctaveChance"));
     persistentState.randomOctaveAmount = static_cast<int>(*apvts.getRawParameterValue("randomOctaveAmount"));
     persistentState.randomVelocity     = static_cast<int>(*apvts.getRawParameterValue("randomVelocity"));
+
+    // Arp
+    persistentState.arpEnabled   = *apvts.getRawParameterValue("arpEnabled") > 0.5f;
+    persistentState.arpSync      = *apvts.getRawParameterValue("arpSync") > 0.5f;
+    persistentState.arpDivision  = static_cast<int>(*apvts.getRawParameterValue("arpDivision"));
+    persistentState.arpRateMs    = static_cast<int>(*apvts.getRawParameterValue("arpRateMs"));
+    persistentState.arpPlayMode  = static_cast<int>(*apvts.getRawParameterValue("arpPlayMode"));
+    persistentState.arpPendulum  = *apvts.getRawParameterValue("arpPendulum") > 0.5f;
+    persistentState.arpRatchet   = static_cast<int>(*apvts.getRawParameterValue("arpRatchet"));
 }
 
 void FurnitureProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
@@ -148,6 +166,36 @@ void FurnitureProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
             pendingNoteOffs.push_back({ gateTimeSamples, evt.midi });
         }
     }
+
+    // --- Arpeggiator ---
+    if (persistentState.arpEnabled)
+    {
+        // Get BPM from host transport, fallback to 120
+        double bpm = 120.0;
+        if (auto* playHead = getPlayHead())
+        {
+            auto posInfo = playHead->getPosition();
+            if (posInfo.hasValue() && posInfo->getBpm().hasValue())
+                bpm = *posInfo->getBpm();
+        }
+
+        auto arpEvents = arp.processBlock(persistentState, transientState,
+                                           numSamples, bpm, currentSampleRate);
+
+        int gateTimeSamples = static_cast<int>(persistentState.gateTime * currentSampleRate / 1000.0);
+
+        for (auto& evt : arpEvents)
+        {
+            int midiVel = std::clamp(static_cast<int>(evt.velocity * 127.0f), 1, 127);
+            int offset = std::clamp(evt.sampleOffset, 0, numSamples - 1);
+
+            midiMessages.addEvent(
+                juce::MidiMessage::noteOn(1, evt.midi, static_cast<uint8_t>(midiVel)),
+                offset);
+
+            pendingNoteOffs.push_back({ gateTimeSamples, evt.midi });
+        }
+    }
 }
 
 void FurnitureProcessor::resetBalls()
@@ -201,6 +249,7 @@ void FurnitureProcessor::getStateInformation(juce::MemoryBlock& destData)
             zt.setProperty("hh", z.hh, nullptr);
             zt.setProperty("midi", z.midi, nullptr);
             zt.setProperty("colorIndex", z.colorIndex, nullptr);
+            zt.setProperty("placementOrder", z.placementOrder, nullptr);
             zonesTree.addChild(zt, -1, nullptr);
         }
     }
@@ -236,6 +285,7 @@ void FurnitureProcessor::setStateInformation(const void* data, int sizeInBytes)
                 z.hh = zt.getProperty("hh");
                 z.midi = zt.getProperty("midi");
                 z.colorIndex = zt.getProperty("colorIndex");
+                z.placementOrder = zt.getProperty("placementOrder", static_cast<int>(i));
                 persistentState.zones.push_back(z);
             }
             transientState = StateUtils::createTransientState(persistentState);

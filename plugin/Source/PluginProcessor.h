@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "Engine/PhysicsEngine.h"
+#include "Engine/Arp.h"
 #include "Engine/State.h"
 #include <mutex>
 
@@ -55,6 +56,7 @@ private:
     void pullParametersFromAPVTS();
 
     PhysicsEngine physics;
+    ArpEngine arp;
     PersistentState persistentState;
     TransientState transientState;
     std::recursive_mutex stateMutex;
