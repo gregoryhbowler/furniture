@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bounce Seq</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="canvas-wrap">
+      <div id="canvas-container">
+        <canvas id="canvas"></canvas>
+
+        <div id="zone-editor">
+        <span id="zone-name">C4</span>
+
+        <label>Note
+          <select id="zone-note">
+            <option value="0">C</option>
+            <option value="1">C#</option>
+            <option value="2">D</option>
+            <option value="3">D#</option>
+            <option value="4">E</option>
+            <option value="5">F</option>
+            <option value="6">F#</option>
+            <option value="7">G</option>
+            <option value="8">G#</option>
+            <option value="9">A</option>
+            <option value="10">A#</option>
+            <option value="11">B</option>
+          </select>
+        </label>
+
+        <label>Octave
+          <select id="zone-octave">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+          </select>
+        </label>
+
+        <label>W <input type="range" id="zone-width" min="10" max="100" value="50"></label>
+        <label>H <input type="range" id="zone-height" min="10" max="100" value="50"></label>
+
+        <button id="zone-duplicate">Duplicate</button>
+        <button id="zone-delete">Delete</button>
+        <button id="zone-close">Close</button>
+      </div>
+      </div>
+    </div>
+
+    <div id="sidebar">
+      <div class="section-title">Physics</div>
+
+      <div class="control-row">
+        <label>Gravity</label>
+        <input type="range" id="slider-gravity">
+        <span class="val" id="val-gravity">20</span>
+      </div>
+      <div class="control-row">
+        <label>Bounce</label>
+        <input type="range" id="slider-bounce">
+        <span class="val" id="val-bounce">90</span>
+      </div>
+      <div class="control-row">
+        <label>Friction</label>
+        <input type="range" id="slider-friction">
+        <span class="val" id="val-friction">4</span>
+      </div>
+      <div class="control-row">
+        <label>Speed</label>
+        <input type="range" id="slider-speed">
+        <span class="val" id="val-speed">40</span>
+      </div>
+      <div class="control-row">
+        <label>Balls</label>
+        <input type="range" id="slider-ballCount">
+        <span class="val" id="val-ballCount">2</span>
+      </div>
+      <div class="control-row">
+        <label>Ball Size</label>
+        <input type="range" id="slider-ballSize">
+        <span class="val" id="val-ballSize">7</span>
+      </div>
+      <div class="control-row">
+        <label>Min Energy</label>
+        <input type="range" id="slider-minEnergy">
+        <span class="val" id="val-minEnergy">25</span>
+      </div>
+      <div class="control-row">
+        <label>Momentum</label>
+        <input type="range" id="slider-momentum">
+        <span class="val" id="val-momentum">0</span>
+      </div>
+      <div class="control-row">
+        <label>Jitter</label>
+        <input type="range" id="slider-jitter">
+        <span class="val" id="val-jitter">0</span>
+      </div>
+
+      <div class="toggle-row">
+        <label>Solid Zones</label>
+        <button class="toggle-btn" id="btn-solidZones">On</button>
+      </div>
+      <div class="toggle-row">
+        <label>Ball Collide</label>
+        <button class="toggle-btn" id="btn-ballCollide">Off</button>
+      </div>
+
+      <div class="section-title">Fan</div>
+
+      <div class="control-row">
+        <label>Amount</label>
+        <input type="range" id="slider-fanAmount">
+        <span class="val" id="val-fanAmount">0</span>
+      </div>
+      <div class="control-row">
+        <label>Speed</label>
+        <input type="range" id="slider-fanSpeed">
+        <span class="val" id="val-fanSpeed">30</span>
+      </div>
+      <div class="control-row">
+        <label>Direction</label>
+        <select id="select-fanDirection">
+          <option value="north">North</option>
+          <option value="south">South</option>
+          <option value="east">East</option>
+          <option value="west">West</option>
+          <option value="random">Random</option>
+        </select>
+      </div>
+
+      <div class="section-title">Arpeggiator</div>
+
+      <div class="toggle-row">
+        <label>Arp</label>
+        <button class="toggle-btn" id="btn-arpEnabled">Off</button>
+      </div>
+      <div class="control-row">
+        <label>BPM</label>
+        <input type="range" id="slider-bpm">
+        <span class="val" id="val-bpm">120</span>
+      </div>
+      <div class="toggle-row">
+        <label>Sync</label>
+        <button class="toggle-btn" id="btn-arpSync">On</button>
+      </div>
+      <div class="control-row" id="row-arpDivision">
+        <label>Division</label>
+        <select id="select-arpDivision">
+          <option value="1/64">1/64</option>
+          <option value="1/32">1/32</option>
+          <option value="1/32T">1/32T</option>
+          <option value="1/16">1/16</option>
+          <option value="1/16T">1/16T</option>
+          <option value="1/8" selected>1/8</option>
+          <option value="1/8T">1/8T</option>
+          <option value="1/4">1/4</option>
+          <option value="1/4T">1/4T</option>
+          <option value="1/2">1/2</option>
+          <option value="1/2T">1/2T</option>
+          <option value="1/1">1 Bar</option>
+        </select>
+      </div>
+      <div class="control-row" id="row-arpRateMs" style="display:none">
+        <label>Rate (ms)</label>
+        <input type="range" id="slider-arpRateMs">
+        <span class="val" id="val-arpRateMs">200</span>
+      </div>
+      <div class="control-row">
+        <label>Play Mode</label>
+        <select id="select-arpPlayMode">
+          <option value="first-placed">First Placed</option>
+          <option value="up" selected>Up</option>
+          <option value="down">Down</option>
+          <option value="random">Random</option>
+          <option value="left-right">Left → Right</option>
+          <option value="right-left">Right → Left</option>
+          <option value="vertical-up">Vertical Up</option>
+          <option value="vertical-down">Vertical Down</option>
+        </select>
+      </div>
+      <div class="toggle-row">
+        <label>Pendulum</label>
+        <button class="toggle-btn" id="btn-arpPendulum">Off</button>
+      </div>
+      <div class="control-row">
+        <label>Ratchet</label>
+        <input type="range" id="slider-arpRatchet">
+        <span class="val" id="val-arpRatchet">0</span>
+      </div>
+
+      <div class="section-title">Scale</div>
+
+      <div class="control-row">
+        <label>Root</label>
+        <select id="select-scaleRoot">
+          <option value="0">C</option>
+          <option value="1">C#</option>
+          <option value="2">D</option>
+          <option value="3">D#</option>
+          <option value="4">E</option>
+          <option value="5">F</option>
+          <option value="6">F#</option>
+          <option value="7">G</option>
+          <option value="8">G#</option>
+          <option value="9">A</option>
+          <option value="10">A#</option>
+          <option value="11">B</option>
+        </select>
+      </div>
+      <div class="control-row">
+        <label>Scale</label>
+        <select id="select-scaleName"></select>
+      </div>
+      <div class="action-row">
+        <button class="action-btn" id="btn-quantize">Quantize</button>
+      </div>
+
+      <div class="section-title">Note Variation</div>
+
+      <div class="control-row">
+        <label>Rnd Pitch</label>
+        <input type="range" id="slider-randomPitch">
+        <span class="val" id="val-randomPitch">0</span>
+      </div>
+      <div class="control-row">
+        <label>Oct Chance</label>
+        <input type="range" id="slider-randomOctaveChance">
+        <span class="val" id="val-randomOctaveChance">0</span>
+      </div>
+      <div class="control-row">
+        <label>Oct Amount</label>
+        <input type="range" id="slider-randomOctaveAmount">
+        <span class="val" id="val-randomOctaveAmount">1</span>
+      </div>
+      <div class="control-row">
+        <label>Rnd Velocity</label>
+        <input type="range" id="slider-randomVelocity">
+        <span class="val" id="val-randomVelocity">0</span>
+      </div>
+
+      <div class="section-title">Randomize</div>
+
+      <div class="action-row">
+        <button class="action-btn" id="btn-rand-notes">Randomize Notes</button>
+      </div>
+      <div class="action-row">
+        <button class="action-btn" id="btn-rand-layout">Randomize Layout</button>
+      </div>
+
+      <div class="section-title">Synth</div>
+
+      <div class="control-row">
+        <label>Volume</label>
+        <input type="range" id="slider-masterVolume">
+        <span class="val" id="val-masterVolume">70</span>
+      </div>
+      <div class="control-row">
+        <label>Waveform</label>
+        <select id="select-waveform">
+          <option value="sawtooth">Saw</option>
+          <option value="square">Square</option>
+          <option value="triangle">Triangle</option>
+          <option value="sine">Sine</option>
+        </select>
+      </div>
+      <div class="control-row">
+        <label>Voices</label>
+        <input type="range" id="slider-synthVoices">
+        <span class="val" id="val-synthVoices">4</span>
+      </div>
+      <div class="control-row">
+        <label>Cutoff</label>
+        <input type="range" id="slider-filterCutoff">
+        <span class="val" id="val-filterCutoff">2400</span>
+      </div>
+      <div class="control-row">
+        <label>Resonance</label>
+        <input type="range" id="slider-filterRes">
+        <span class="val" id="val-filterRes">1.0</span>
+      </div>
+      <div class="control-row">
+        <label>Filt Env</label>
+        <input type="range" id="slider-filterEnvAmt">
+        <span class="val" id="val-filterEnvAmt">3000</span>
+      </div>
+
+      <div class="section-title">Envelope</div>
+
+      <div class="control-row">
+        <label>Attack</label>
+        <input type="range" id="slider-attack">
+        <span class="val" id="val-attack">5</span>
+      </div>
+      <div class="control-row">
+        <label>Decay</label>
+        <input type="range" id="slider-decay">
+        <span class="val" id="val-decay">200</span>
+      </div>
+      <div class="control-row">
+        <label>Sustain</label>
+        <input type="range" id="slider-sustain">
+        <span class="val" id="val-sustain">40</span>
+      </div>
+      <div class="control-row">
+        <label>Release</label>
+        <input type="range" id="slider-release">
+        <span class="val" id="val-release">300</span>
+      </div>
+      <div class="control-row">
+        <label>Gate Time</label>
+        <input type="range" id="slider-gateTime">
+        <span class="val" id="val-gateTime">250</span>
+      </div>
+
+      <div class="section-title">MIDI Output</div>
+
+      <div class="toggle-row">
+        <label>MIDI Out</label>
+        <button class="toggle-btn" id="btn-midiEnabled">Off</button>
+      </div>
+      <div class="control-row">
+        <label>Device</label>
+        <select id="select-midiDevice">
+          <option value="">— none —</option>
+        </select>
+      </div>
+      <div class="action-row">
+        <button class="action-btn" id="btn-midiRefresh">Refresh Devices</button>
+      </div>
+
+      <div class="section-title">New Zone Defaults</div>
+
+      <div class="control-row">
+        <label>Note</label>
+        <select id="select-defaultNote">
+          <option value="0">C</option>
+          <option value="1">C#</option>
+          <option value="2">D</option>
+          <option value="3">D#</option>
+          <option value="4">E</option>
+          <option value="5">F</option>
+          <option value="6">F#</option>
+          <option value="7">G</option>
+          <option value="8">G#</option>
+          <option value="9">A</option>
+          <option value="10">A#</option>
+          <option value="11">B</option>
+        </select>
+      </div>
+      <div class="control-row">
+        <label>Octave</label>
+        <select id="select-defaultOctave">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+        </select>
+      </div>
+      <div class="control-row">
+        <label>Width</label>
+        <input type="range" id="slider-defaultWidth">
+        <span class="val" id="val-defaultWidth">40</span>
+      </div>
+      <div class="control-row">
+        <label>Height</label>
+        <input type="range" id="slider-defaultHeight">
+        <span class="val" id="val-defaultHeight">40</span>
+      </div>
+
+      <div class="section-title">Actions</div>
+
+      <div class="action-row">
+        <button class="action-btn" id="btn-pause">Pause</button>
+        <button class="action-btn" id="btn-reset-balls">Reset Balls</button>
+      </div>
+      <div class="action-row">
+        <button class="action-btn" id="btn-clear-zones">Clear All Zones</button>
+      </div>
+
+      <div class="section-title">MIDI Log</div>
+      <div id="midi-log"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

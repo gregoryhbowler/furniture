@@ -1,0 +1,14 @@
+# Build artifacts
+plugin/build/
+*.o
+*.d
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.xcworkspace
+*.xcuserdata

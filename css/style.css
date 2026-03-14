@@ -1,0 +1,280 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1a1a1a;
+  color: #ccc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  overflow: hidden;
+  height: 100vh;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+  flex-direction: row;
+}
+
+/* Canvas area */
+#canvas-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+#canvas-container {
+  flex: 1 1 0;
+  position: relative;
+  min-height: 100px;
+}
+
+#canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+/* Zone editor strip — fixed at bottom of canvas area */
+#zone-editor {
+  display: none;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(30, 30, 30, 0.95);
+  border-top: 2px solid #555;
+  flex-wrap: wrap;
+}
+
+#zone-editor.open {
+  display: flex;
+}
+
+#zone-editor label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #aaa;
+}
+
+#zone-name {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: #eeff88;
+  min-width: 36px;
+}
+
+#zone-editor select,
+#zone-editor input[type="range"] {
+  background: #333;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 12px;
+}
+
+#zone-editor select {
+  cursor: pointer;
+}
+
+#zone-editor input[type="range"] {
+  width: 80px;
+}
+
+#zone-editor button {
+  padding: 3px 10px;
+  font-size: 12px;
+  background: #333;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+#zone-editor button:hover {
+  background: #444;
+}
+
+#zone-duplicate {
+  color: #5DCAA5;
+  border-color: #5DCAA5;
+}
+
+#zone-delete {
+  color: #E24B4A;
+  border-color: #E24B4A;
+}
+
+/* Sidebar */
+#sidebar {
+  width: 230px;
+  background: #1e1e1e;
+  border-left: 1px solid #333;
+  padding: 12px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #666;
+  margin: 16px 0 8px 0;
+}
+
+.section-title:first-child {
+  margin-top: 4px;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.control-row label {
+  font-size: 12px;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.control-row .val {
+  font-size: 11px;
+  color: #777;
+  min-width: 28px;
+  text-align: right;
+  font-family: monospace;
+}
+
+.control-row input[type="range"] {
+  flex: 1;
+  margin: 0 8px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #333;
+  border-radius: 2px;
+  outline: none;
+}
+
+.control-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #7a9;
+  cursor: pointer;
+}
+
+.control-row select {
+  background: #333;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 12px;
+  cursor: pointer;
+  max-width: 130px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.toggle-row label {
+  font-size: 12px;
+  color: #999;
+}
+
+.toggle-btn {
+  padding: 2px 10px;
+  font-size: 11px;
+  background: #333;
+  color: #777;
+  border: 1px solid #444;
+  border-radius: 3px;
+  cursor: pointer;
+  min-width: 36px;
+  text-align: center;
+}
+
+.toggle-btn.active {
+  background: #3d5c42;
+  color: #bde0c2;
+  border-color: #5a8a62;
+}
+
+.action-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 5px 10px;
+  font-size: 11px;
+  background: #2a2a2a;
+  color: #aaa;
+  border: 1px solid #444;
+  border-radius: 3px;
+  cursor: pointer;
+  flex: 1;
+  text-align: center;
+}
+
+.action-btn:hover {
+  background: #383838;
+  color: #ccc;
+}
+
+#midi-log {
+  margin-top: 8px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 3px;
+  padding: 6px;
+  font-family: monospace;
+  font-size: 10px;
+  color: #7a9;
+  height: 120px;
+  overflow-y: auto;
+  white-space: pre;
+  line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  #app {
+    flex-direction: column;
+  }
+  #sidebar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #333;
+    max-height: 40vh;
+  }
+}
