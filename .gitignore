@@ -1,5 +1,6 @@
 # Build artifacts
 plugin/build/
+release/
 *.o
 *.d
 
