@@ -59,6 +59,60 @@ void Sidebar::setupControls()
     };
     addAndMakeVisible(fanDirBox);
 
+    // Arpeggiator section
+    addAndMakeVisible(arpLabel);
+
+    arpEnabledLabel.setText("Arp", juce::dontSendNotification);
+    arpEnabledLabel.setFont(juce::Font(12.0f));
+    arpEnabledLabel.setColour(juce::Label::textColourId, juce::Colour(0xFFcccccc));
+    addAndMakeVisible(arpEnabledLabel);
+    addAndMakeVisible(arpEnabledBtn);
+    arpEnabledAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        apvts, "arpEnabled", arpEnabledBtn);
+
+    arpSyncLabel.setText("Sync", juce::dontSendNotification);
+    arpSyncLabel.setFont(juce::Font(12.0f));
+    arpSyncLabel.setColour(juce::Label::textColourId, juce::Colour(0xFFcccccc));
+    addAndMakeVisible(arpSyncLabel);
+    addAndMakeVisible(arpSyncBtn);
+    arpSyncAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        apvts, "arpSync", arpSyncBtn);
+
+    arpDivision.setup(this, "Division", apvts, "arpDivision");
+    arpRateMs.setup(this, "Rate (ms)", apvts, "arpRateMs");
+
+    arpPlayModeLabel.setText("Mode", juce::dontSendNotification);
+    arpPlayModeLabel.setFont(juce::Font(12.0f));
+    arpPlayModeLabel.setColour(juce::Label::textColourId, juce::Colour(0xFFcccccc));
+    addAndMakeVisible(arpPlayModeLabel);
+
+    for (int i = 0; i < static_cast<int>(ArpPlayMode::COUNT); i++)
+        arpPlayModeBox.addItem(arpPlayModeName(static_cast<ArpPlayMode>(i)), i + 1);
+    arpPlayModeBox.setSelectedId(persistent.arpPlayMode + 1);
+    arpPlayModeBox.onChange = [this]() {
+        if (auto* param = apvts.getParameter("arpPlayMode"))
+            param->setValueNotifyingHost(param->convertTo0to1(static_cast<float>(arpPlayModeBox.getSelectedId() - 1)));
+    };
+    addAndMakeVisible(arpPlayModeBox);
+
+    arpPendulumLabel.setText("Pendulum", juce::dontSendNotification);
+    arpPendulumLabel.setFont(juce::Font(12.0f));
+    arpPendulumLabel.setColour(juce::Label::textColourId, juce::Colour(0xFFcccccc));
+    addAndMakeVisible(arpPendulumLabel);
+    addAndMakeVisible(arpPendulumBtn);
+    arpPendulumAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        apvts, "arpPendulum", arpPendulumBtn);
+
+    arpRatchet.setup(this, "Ratchet", apvts, "arpRatchet");
+
+    arpUseRandLabel.setText("Note Var", juce::dontSendNotification);
+    arpUseRandLabel.setFont(juce::Font(12.0f));
+    arpUseRandLabel.setColour(juce::Label::textColourId, juce::Colour(0xFFcccccc));
+    addAndMakeVisible(arpUseRandLabel);
+    addAndMakeVisible(arpUseRandBtn);
+    arpUseRandAtt = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        apvts, "arpUseRandomization", arpUseRandBtn);
+
     // Scale section
     addAndMakeVisible(scaleLabel);
 
@@ -100,6 +154,7 @@ void Sidebar::setupControls()
     randomOctaveChance.setup(this, "Oct Chance",  apvts, "randomOctaveChance");
     randomOctaveAmount.setup(this, "Oct Amount",  apvts, "randomOctaveAmount");
     randomVelocity.setup(this,     "Rnd Velocity",apvts, "randomVelocity");
+    velocityFloor.setup(this,      "Vel Floor",   apvts, "velocityFloor");
 
     // Performance
     addAndMakeVisible(perfLabel);
@@ -257,6 +312,19 @@ void Sidebar::resized()
 
     y += 4;
 
+    // Arpeggiator
+    placeSection(arpLabel);
+    placeToggle(arpEnabledLabel, arpEnabledBtn);
+    placeToggle(arpSyncLabel, arpSyncBtn);
+    placeRow(arpDivision);
+    placeRow(arpRateMs);
+    placeCombo(arpPlayModeLabel, arpPlayModeBox);
+    placeToggle(arpPendulumLabel, arpPendulumBtn);
+    placeRow(arpRatchet);
+    placeToggle(arpUseRandLabel, arpUseRandBtn);
+
+    y += 4;
+
     // Scale
     placeSection(scaleLabel);
     placeCombo(scaleRootLabel, scaleRootBox);
@@ -271,6 +339,7 @@ void Sidebar::resized()
     placeRow(randomOctaveChance);
     placeRow(randomOctaveAmount);
     placeRow(randomVelocity);
+    placeRow(velocityFloor);
 
     y += 4;
 

@@ -4,6 +4,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../Engine/State.h"
 #include "../Engine/Scales.h"
+#include "../Engine/Arp.h"
 #include <functional>
 
 class Sidebar : public juce::Component
@@ -100,9 +101,32 @@ private:
     juce::ComboBox scaleRootBox, scaleNameBox;
     juce::TextButton quantizeBtn{"Quantize"};
 
+    // Arpeggiator
+    SectionLabel arpLabel{"ARPEGGIATOR"};
+    juce::Label arpEnabledLabel;
+    juce::ToggleButton arpEnabledBtn;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> arpEnabledAtt;
+
+    juce::Label arpSyncLabel;
+    juce::ToggleButton arpSyncBtn;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> arpSyncAtt;
+
+    ParamRow arpDivision, arpRateMs, arpRatchet;
+
+    juce::Label arpPlayModeLabel;
+    juce::ComboBox arpPlayModeBox;
+
+    juce::Label arpPendulumLabel;
+    juce::ToggleButton arpPendulumBtn;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> arpPendulumAtt;
+
+    juce::Label arpUseRandLabel;
+    juce::ToggleButton arpUseRandBtn;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> arpUseRandAtt;
+
     // Note variation
     SectionLabel noteVarLabel{"NOTE VARIATION"};
-    ParamRow randomPitch, randomOctaveChance, randomOctaveAmount, randomVelocity;
+    ParamRow randomPitch, randomOctaveChance, randomOctaveAmount, randomVelocity, velocityFloor;
 
     // Performance
     SectionLabel perfLabel{"PERFORMANCE"};
