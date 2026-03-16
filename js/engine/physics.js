@@ -31,7 +31,7 @@ export function tick(persistent, transient, dt) {
   // Bounce is elasticity only — capped at 1.0 (perfectly elastic). Never adds energy on its own.
   const bounceVal = Math.min(bounce / 100, 1.0);
   const wallBounceVal = bounceVal;
-  const ballRadius = 0.005 + (ballSize / 18) * 0.015;
+  const ballRadius = 0.005 + (ballSize / 36) * 0.035;
   const minEnergyVal = (minEnergy / 100) * 0.004;
   // Momentum: extra energy on zone bounce, with diminishing returns at high speeds
   const momentumRaw = momentum / 100; // 0-1

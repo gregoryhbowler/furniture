@@ -67,6 +67,8 @@ export function createDefaultPersistentState() {
     arpDivision: '1/8',       // sync mode division
     arpRateMs: 200,            // unsync mode rate in ms (10-4000)
     arpPlayMode: 'up',        // first-placed, up, down, random, left-right, right-left, vertical-up, vertical-down
+    arpPath: 'sequential',     // sequential, palindrome, interleaved, zigzag, cross, additive, random-loop
+    arpPathLoopLen: 4,         // loop length for random-loop path (2-16)
     arpPendulum: false,        // true = bounce back and forth, false = loop
     arpRatchet: 0,             // 0-16 extra repeats per step
     arpUseRandomization: false, // apply note variation (pitch/octave/velocity) to arp

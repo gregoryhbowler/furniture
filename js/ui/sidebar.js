@@ -15,7 +15,7 @@ export function setupSidebar(persistent, transient, callbacks) {
   bindSlider('ballCount', persistent, 'ballCount', 0, 16, () => {
     transient.balls = createBalls(persistent);
   });
-  bindSlider('ballSize', persistent, 'ballSize', 3, 18);
+  bindSlider('ballSize', persistent, 'ballSize', 3, 36);
   bindSlider('minEnergy', persistent, 'minEnergy', 0, 80);
   bindSlider('momentum', persistent, 'momentum', 0, 100);
   bindSlider('jitter', persistent, 'jitter', 0, 100);
@@ -55,6 +55,18 @@ export function setupSidebar(persistent, transient, callbacks) {
   arpModeSel.addEventListener('change', () => {
     persistent.arpPlayMode = arpModeSel.value;
     if (transient.arpState) transient.arpState.needsRebuild = true;
+  });
+
+  const arpPathSel = document.getElementById('select-arpPath');
+  arpPathSel.value = persistent.arpPath;
+  arpPathSel.addEventListener('change', () => {
+    persistent.arpPath = arpPathSel.value;
+    if (transient.arpState) transient.arpState.needsRebuild = true;
+  });
+
+  bindSlider('arpPathLoopLen', persistent, 'arpPathLoopLen', 2, 16, () => {
+    if (persistent.arpPath === 'random-loop' && transient.arpState)
+      transient.arpState.needsRebuild = true;
   });
 
   bindToggle('arpPendulum', persistent, 'arpPendulum');

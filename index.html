@@ -185,6 +185,23 @@
           <option value="vertical-down">Vertical Down</option>
         </select>
       </div>
+      <div class="control-row">
+        <label>Path</label>
+        <select id="select-arpPath">
+          <option value="sequential" selected>Sequential</option>
+          <option value="palindrome">Palindrome</option>
+          <option value="interleaved">Interleaved</option>
+          <option value="zigzag">Zigzag</option>
+          <option value="cross">Cross</option>
+          <option value="additive">Additive</option>
+          <option value="random-loop">Random Loop</option>
+        </select>
+      </div>
+      <div class="control-row">
+        <label>Loop Len</label>
+        <input type="range" id="slider-arpPathLoopLen">
+        <span class="val" id="val-arpPathLoopLen">4</span>
+      </div>
       <div class="toggle-row">
         <label>Pendulum</label>
         <button class="toggle-btn" id="btn-arpPendulum">Off</button>

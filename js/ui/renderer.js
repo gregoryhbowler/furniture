@@ -39,7 +39,7 @@ export function render(canvas, ctx, persistent, transient) {
   const h = container.clientHeight;
   const { zones, ballSize } = persistent;
   const { balls, zoneFlash, selectedZone, audioStarted } = transient;
-  const ballRadius = 0.005 + (ballSize / 18) * 0.015;
+  const ballRadius = 0.005 + (ballSize / 36) * 0.035;
 
   // Background
   ctx.fillStyle = '#2d5a3a';

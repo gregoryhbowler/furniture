@@ -32,6 +32,26 @@ export const PLAY_MODES = [
   'vertical-down',
 ];
 
+export const ARP_PATHS = [
+  'sequential',
+  'palindrome',
+  'interleaved',
+  'zigzag',
+  'cross',
+  'additive',
+  'random-loop',
+];
+
+export const ARP_PATH_LABELS = [
+  'Sequential',
+  'Palindrome',
+  'Interleaved',
+  'Zigzag',
+  'Cross',
+  'Additive',
+  'Random Loop',
+];
+
 /**
  * Calculate arp interval in milliseconds.
  * @param {string} division — key into DIVISIONS
@@ -102,6 +122,104 @@ export function buildSequence(zones, playMode) {
 }
 
 /**
+ * Apply a path transformation to the base sequence.
+ * @param {number[]} baseSeq — sorted zone indices
+ * @param {string} path — one of ARP_PATHS
+ * @param {number} loopLen — loop length for random-loop path
+ * @param {function} prng — PRNG function
+ * @returns {number[]} transformed sequence
+ */
+export function applyPath(baseSeq, path, loopLen, prng) {
+  if (baseSeq.length === 0) return baseSeq;
+  const n = baseSeq.length;
+
+  switch (path) {
+    case 'sequential':
+      return baseSeq;
+
+    case 'palindrome': {
+      const result = [...baseSeq];
+      for (let i = n - 1; i >= 0; i--)
+        result.push(baseSeq[i]);
+      return result;
+    }
+
+    case 'interleaved': {
+      const half = Math.ceil(n / 2);
+      const result = [];
+      for (let i = 0; i < half; i++) {
+        result.push(baseSeq[i]);
+        const j = i + half;
+        if (j < n) result.push(baseSeq[j]);
+      }
+      return result;
+    }
+
+    case 'zigzag': {
+      const result = [];
+      for (let g = 0; g < n; g += 4) {
+        const end = Math.min(g + 4, n);
+        const groupSize = end - g;
+        if (groupSize >= 3) {
+          result.push(baseSeq[g]);
+          result.push(baseSeq[g + 2]);
+          result.push(baseSeq[g + 1]);
+          if (groupSize >= 4) result.push(baseSeq[g + 3]);
+        } else {
+          for (let i = g; i < end; i++) result.push(baseSeq[i]);
+        }
+      }
+      return result;
+    }
+
+    case 'cross': {
+      const half = Math.ceil(n / 2);
+      const first = baseSeq.slice(0, half);
+      const second = baseSeq.slice(half);
+      const result = [];
+      let fi = 0, si = 0;
+      let useFirst = true;
+      while (fi < first.length || si < second.length) {
+        if (useFirst && fi < first.length)
+          result.push(first[fi++]);
+        else if (!useFirst && si < second.length)
+          result.push(second[si++]);
+        else if (fi < first.length)
+          result.push(first[fi++]);
+        else
+          result.push(second[si++]);
+        useFirst = !useFirst;
+      }
+      return result;
+    }
+
+    case 'additive': {
+      const result = [];
+      for (let len = 1; len <= n; len++)
+        for (let i = 0; i < len; i++)
+          result.push(baseSeq[i]);
+      return result;
+    }
+
+    case 'random-loop': {
+      const effectiveLen = Math.min(Math.max(loopLen, 2), n);
+      const pool = [...baseSeq];
+      const result = [];
+      for (let i = 0; i < effectiveLen; i++) {
+        const remaining = pool.length;
+        const pick = Math.floor(prng() * remaining) % remaining;
+        result.push(pool[pick]);
+        pool.splice(pick, 1);
+      }
+      return result;
+    }
+
+    default:
+      return baseSeq;
+  }
+}
+
+/**
  * Create initial arp runtime state.
  */
 export function createArpState() {
@@ -114,6 +232,8 @@ export function createArpState() {
     lastRandomIndex: -1,   // prevent same-note-twice in random mode
     lastZoneCount: 0,      // track zone additions/removals
     lastZoneHash: '',      // track zone position/note changes
+    lastPlayMode: '',      // track play mode changes
+    lastArpPath: '',       // track path changes
     needsRebuild: true,    // flag to rebuild sequence
   };
 }
@@ -133,14 +253,18 @@ function zoneHash(zones) {
 /**
  * Check if zones have changed and rebuild sequence if needed.
  */
-function maybeRebuildSequence(zones, playMode, arpState) {
+function maybeRebuildSequence(zones, playMode, arpPath, arpPathLoopLen, arpState, prng) {
   const count = zones.length;
   const hash = zoneHash(zones);
 
-  if (arpState.needsRebuild || count !== arpState.lastZoneCount || hash !== arpState.lastZoneHash) {
-    arpState.sequence = buildSequence(zones, playMode);
+  if (arpState.needsRebuild || count !== arpState.lastZoneCount || hash !== arpState.lastZoneHash
+      || playMode !== arpState.lastPlayMode || arpPath !== arpState.lastArpPath) {
+    const base = buildSequence(zones, playMode);
+    arpState.sequence = applyPath(base, arpPath, arpPathLoopLen, prng);
     arpState.lastZoneCount = count;
     arpState.lastZoneHash = hash;
+    arpState.lastPlayMode = playMode;
+    arpState.lastArpPath = arpPath;
     arpState.needsRebuild = false;
 
     // Clamp position to valid range
@@ -208,7 +332,10 @@ export function tickArp(persistent, transient, currentTimeMs) {
   const arpState = transient.arpState;
 
   // Rebuild sequence if zones changed
-  maybeRebuildSequence(persistent.zones, persistent.arpPlayMode, arpState);
+  maybeRebuildSequence(persistent.zones, persistent.arpPlayMode,
+                       persistent.arpPath || 'sequential',
+                       persistent.arpPathLoopLen || 4,
+                       arpState, transient.prng);
 
   if (arpState.sequence.length === 0) return events;
 
