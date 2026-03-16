@@ -87,7 +87,7 @@ void SimulationCanvas::paint(juce::Graphics& g)
     }
 
     // Draw ball trails
-    float ballRadius = 0.005f + (persistent.ballSize / 18.0f) * 0.015f;
+    float ballRadius = 0.005f + (persistent.ballSize / 36.0f) * 0.035f;
 
     for (auto& ball : transient.balls)
     {

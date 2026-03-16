@@ -95,6 +95,22 @@ void Sidebar::setupControls()
     };
     addAndMakeVisible(arpPlayModeBox);
 
+    arpPathLabel.setText("Path", juce::dontSendNotification);
+    arpPathLabel.setFont(juce::Font(12.0f));
+    arpPathLabel.setColour(juce::Label::textColourId, juce::Colour(0xFFcccccc));
+    addAndMakeVisible(arpPathLabel);
+
+    for (int i = 0; i < static_cast<int>(ArpPath::COUNT); i++)
+        arpPathBox.addItem(arpPathName(static_cast<ArpPath>(i)), i + 1);
+    arpPathBox.setSelectedId(persistent.arpPath + 1);
+    arpPathBox.onChange = [this]() {
+        if (auto* param = apvts.getParameter("arpPath"))
+            param->setValueNotifyingHost(param->convertTo0to1(static_cast<float>(arpPathBox.getSelectedId() - 1)));
+    };
+    addAndMakeVisible(arpPathBox);
+
+    arpPathLoopLen.setup(this, "Loop Len", apvts, "arpPathLoopLen");
+
     arpPendulumLabel.setText("Pendulum", juce::dontSendNotification);
     arpPendulumLabel.setFont(juce::Font(12.0f));
     arpPendulumLabel.setColour(juce::Label::textColourId, juce::Colour(0xFFcccccc));
@@ -319,6 +335,8 @@ void Sidebar::resized()
     placeRow(arpDivision);
     placeRow(arpRateMs);
     placeCombo(arpPlayModeLabel, arpPlayModeBox);
+    placeCombo(arpPathLabel, arpPathBox);
+    placeRow(arpPathLoopLen);
     placeToggle(arpPendulumLabel, arpPendulumBtn);
     placeRow(arpRatchet);
     placeToggle(arpUseRandLabel, arpUseRandBtn);
@@ -372,4 +390,7 @@ void Sidebar::resized()
         placeButton(zoneDuplicateBtn);
         placeButton(zoneDeleteBtn);
     }
+
+    // Resize to fit content so viewport scrolls correctly
+    setSize(getWidth(), y + 10);
 }

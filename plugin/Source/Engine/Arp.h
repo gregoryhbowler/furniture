@@ -36,6 +36,18 @@ enum class ArpPlayMode
     COUNT
 };
 
+enum class ArpPath
+{
+    Sequential,   // 1-2-3-4, 5-6-7-8
+    Palindrome,   // 1-2-3-4, 5-6-7-8, 8-7-6-5, 4-3-2-1
+    Interleaved,  // 1-5-2-6, 3-7-4-8
+    Zigzag,       // 1-3-2-4, 5-7-6-8
+    Cross,        // 1-5-2-7, 4-8-3-6
+    Additive,     // 1, 1-2, 1-2-3, ...
+    RandomLoop,   // random order, looped
+    COUNT
+};
+
 inline const char* arpDivisionName(ArpDivision d)
 {
     static const char* names[] = {
@@ -52,6 +64,15 @@ inline const char* arpPlayModeName(ArpPlayMode m)
         "Left-Right", "Right-Left", "Vertical Up", "Vertical Down"
     };
     return names[static_cast<int>(m)];
+}
+
+inline const char* arpPathName(ArpPath p)
+{
+    static const char* names[] = {
+        "Sequential", "Palindrome", "Interleaved", "Zigzag",
+        "Cross", "Additive", "Random Loop"
+    };
+    return names[static_cast<int>(p)];
 }
 
 // Returns the division value in beats (quarter notes)
@@ -83,8 +104,9 @@ inline double divisionToSamples(ArpDivision division, double bpm, double sampleR
 class ArpEngine
 {
 public:
-    // Build sorted sequence of zone indices based on play mode
+    // Build sorted sequence of zone indices based on play mode, then apply path
     static std::vector<int> buildSequence(const std::vector<Zone>& zones, ArpPlayMode mode);
+    static std::vector<int> applyPath(const std::vector<int>& baseSeq, ArpPath path, int loopLen, PRNG& prng);
 
     // Run arp for a block of samples. Returns events with sample offsets.
     // bpm comes from host transport (or manual setting).
@@ -103,6 +125,6 @@ public:
                                         double sampleRate);
 
 private:
-    void maybeRebuildSequence(const std::vector<Zone>& zones, ArpPlayMode mode, ArpState& arp);
+    void maybeRebuildSequence(const std::vector<Zone>& zones, ArpPlayMode mode, ArpPath path, int pathLoopLen, ArpState& arp, PRNG& prng);
     void advancePosition(ArpState& arp, ArpPlayMode mode, bool pendulum, PRNG& prng);
 };

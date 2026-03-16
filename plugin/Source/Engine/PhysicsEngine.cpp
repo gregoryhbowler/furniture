@@ -24,7 +24,7 @@ std::vector<PhysicsEvent> PhysicsEngine::tick(PersistentState& persistent,
     const float frictionVal = (persistent.friction / 100.0f) * 0.03f;
     const float bounceVal   = std::min(persistent.bounce / 100.0f, 1.0f);
     const float wallBounceVal = bounceVal;
-    const float ballRadius  = 0.005f + (persistent.ballSize / 18.0f) * 0.015f;
+    const float ballRadius  = 0.005f + (persistent.ballSize / 36.0f) * 0.035f;
     const float minEnergyVal = (persistent.minEnergy / 100.0f) * 0.004f;
     const float momentumRaw = persistent.momentum / 100.0f;
 

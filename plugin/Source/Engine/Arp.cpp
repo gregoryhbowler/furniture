@@ -69,14 +69,139 @@ std::vector<int> ArpEngine::buildSequence(const std::vector<Zone>& zones, ArpPla
     return indices;
 }
 
-void ArpEngine::maybeRebuildSequence(const std::vector<Zone>& zones, ArpPlayMode mode, ArpState& arp)
+std::vector<int> ArpEngine::applyPath(const std::vector<int>& baseSeq, ArpPath path, int loopLen, PRNG& prng)
+{
+    if (baseSeq.empty()) return baseSeq;
+    int n = static_cast<int>(baseSeq.size());
+
+    switch (path)
+    {
+        case ArpPath::Sequential:
+            return baseSeq;
+
+        case ArpPath::Palindrome:
+        {
+            // Forward then reverse: 1-2-3-4-5-6-7-8, 8-7-6-5-4-3-2-1
+            std::vector<int> result = baseSeq;
+            for (int i = n - 1; i >= 0; i--)
+                result.push_back(baseSeq[i]);
+            return result;
+        }
+
+        case ArpPath::Interleaved:
+        {
+            // Interleave first half with second half: 1-5-2-6-3-7-4-8
+            int half = (n + 1) / 2;
+            std::vector<int> result;
+            result.reserve(n);
+            for (int i = 0; i < half; i++)
+            {
+                result.push_back(baseSeq[i]);
+                int j = i + half;
+                if (j < n)
+                    result.push_back(baseSeq[j]);
+            }
+            return result;
+        }
+
+        case ArpPath::Zigzag:
+        {
+            // Zigzag within groups of 4: 1-3-2-4, 5-7-6-8
+            std::vector<int> result;
+            result.reserve(n);
+            for (int g = 0; g < n; g += 4)
+            {
+                int end = std::min(g + 4, n);
+                int groupSize = end - g;
+                if (groupSize >= 3)
+                {
+                    result.push_back(baseSeq[g]);       // 1
+                    result.push_back(baseSeq[g + 2]);   // 3
+                    result.push_back(baseSeq[g + 1]);   // 2
+                    if (groupSize >= 4)
+                        result.push_back(baseSeq[g + 3]); // 4
+                }
+                else
+                {
+                    for (int i = g; i < end; i++)
+                        result.push_back(baseSeq[i]);
+                }
+            }
+            return result;
+        }
+
+        case ArpPath::Cross:
+        {
+            // Cross interleave: 1-5-2-7, 4-8-3-6
+            int half = (n + 1) / 2;
+            std::vector<int> first(baseSeq.begin(), baseSeq.begin() + half);
+            std::vector<int> second(baseSeq.begin() + half, baseSeq.end());
+
+            std::vector<int> result;
+            result.reserve(n);
+            int fi = 0, si = 0;
+            bool useFirst = true;
+            while (fi < static_cast<int>(first.size()) || si < static_cast<int>(second.size()))
+            {
+                if (useFirst && fi < static_cast<int>(first.size()))
+                    result.push_back(first[fi++]);
+                else if (!useFirst && si < static_cast<int>(second.size()))
+                    result.push_back(second[si++]);
+                else if (fi < static_cast<int>(first.size()))
+                    result.push_back(first[fi++]);
+                else
+                    result.push_back(second[si++]);
+                useFirst = !useFirst;
+            }
+            return result;
+        }
+
+        case ArpPath::Additive:
+        {
+            // Growing: 1, 1-2, 1-2-3, ..., 1-2-3-...-N
+            std::vector<int> result;
+            for (int len = 1; len <= n; len++)
+                for (int i = 0; i < len; i++)
+                    result.push_back(baseSeq[i]);
+            return result;
+        }
+
+        case ArpPath::RandomLoop:
+        {
+            // Random permutation, with configurable loop length
+            int effectiveLen = std::min(std::max(loopLen, 2), n);
+            std::vector<int> pool = baseSeq;
+            std::vector<int> result;
+            result.reserve(effectiveLen);
+            for (int i = 0; i < effectiveLen; i++)
+            {
+                int remaining = static_cast<int>(pool.size());
+                int pick = static_cast<int>(prng() * remaining) % remaining;
+                result.push_back(pool[pick]);
+                pool.erase(pool.begin() + pick);
+            }
+            return result;
+        }
+
+        default:
+            return baseSeq;
+    }
+}
+
+void ArpEngine::maybeRebuildSequence(const std::vector<Zone>& zones, ArpPlayMode mode, ArpPath path, int pathLoopLen, ArpState& arp, PRNG& prng)
 {
     int count = static_cast<int>(zones.size());
+    int modeInt = static_cast<int>(mode);
+    int pathInt = static_cast<int>(path);
 
-    if (arp.needsRebuild || count != arp.lastZoneCount)
+    if (arp.needsRebuild || count != arp.lastZoneCount
+        || modeInt != arp.lastPlayMode || pathInt != arp.lastArpPath)
     {
-        arp.sequence = buildSequence(zones, mode);
+        auto base = buildSequence(zones, mode);
+        arp.sequence = applyPath(base, path, pathLoopLen, prng);
         arp.lastZoneCount = count;
+        arp.lastPlayMode = modeInt;
+        arp.lastArpPath = pathInt;
         arp.needsRebuild = false;
 
         if (!arp.sequence.empty())
@@ -143,7 +268,9 @@ std::vector<ArpEngine::ArpEvent> ArpEngine::processBlock(
 
     maybeRebuildSequence(persistent.zones,
                          static_cast<ArpPlayMode>(persistent.arpPlayMode),
-                         arp);
+                         static_cast<ArpPath>(persistent.arpPath),
+                         persistent.arpPathLoopLen,
+                         arp, transient.prng);
 
     if (arp.sequence.empty()) return events;
 

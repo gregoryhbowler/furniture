@@ -39,7 +39,7 @@ struct PersistentState
     int friction     = 4;     // 0-50
     int speed        = 40;    // 5-100
     int ballCount    = 2;     // 0-16
-    int ballSize     = 7;     // 3-18
+    int ballSize     = 7;     // 3-36
     int minEnergy    = 25;    // 0-80
     bool solidZones  = true;
     bool ballCollide = false;
@@ -67,6 +67,8 @@ struct PersistentState
     int  arpDivision   = 5;        // index into ArpDivision enum (default 1/8)
     int  arpRateMs     = 200;      // free-running rate in ms (10-4000)
     int  arpPlayMode   = 1;        // index into ArpPlayMode enum (default Up)
+    int  arpPath       = 0;        // index into ArpPath enum (default Sequential)
+    int  arpPathLoopLen = 4;       // loop length for random path (2-16)
     bool arpPendulum   = false;
     int  arpRatchet    = 0;        // 0-16
     bool arpUseRandomization = false;
@@ -83,6 +85,8 @@ struct ArpState
     double sampleAccumulator = 0.0;  // sample-accurate timing
     std::vector<int> sequence;       // sorted zone indices
     int lastZoneCount = 0;
+    int lastPlayMode = -1;
+    int lastArpPath = -1;
     bool needsRebuild = true;
 };
 

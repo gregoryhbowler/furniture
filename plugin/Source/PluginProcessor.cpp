@@ -23,7 +23,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout FurnitureProcessor::createPa
     params.push_back(std::make_unique<juce::AudioParameterInt>("friction",   "Friction",    0, 50, 4));
     params.push_back(std::make_unique<juce::AudioParameterInt>("speed",      "Speed",       5, 100, 40));
     params.push_back(std::make_unique<juce::AudioParameterInt>("ballCount",  "Balls",       0, 16, 2));
-    params.push_back(std::make_unique<juce::AudioParameterInt>("ballSize",   "Ball Size",   3, 18, 7));
+    params.push_back(std::make_unique<juce::AudioParameterInt>("ballSize",   "Ball Size",   3, 36, 7));
     params.push_back(std::make_unique<juce::AudioParameterInt>("minEnergy",  "Min Energy",  0, 80, 25));
     params.push_back(std::make_unique<juce::AudioParameterInt>("momentum",   "Momentum",    0, 100, 0));
     params.push_back(std::make_unique<juce::AudioParameterInt>("jitter",     "Jitter",      0, 100, 0));
@@ -51,6 +51,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout FurnitureProcessor::createPa
     params.push_back(std::make_unique<juce::AudioParameterInt>("arpDivision",   "Arp Division", 0, 11, 5));  // default 1/8
     params.push_back(std::make_unique<juce::AudioParameterInt>("arpRateMs",     "Arp Rate",     10, 4000, 200));
     params.push_back(std::make_unique<juce::AudioParameterInt>("arpPlayMode",   "Arp Mode",     0, 7, 1));   // default Up
+    params.push_back(std::make_unique<juce::AudioParameterInt>("arpPath",       "Arp Path",     0, 6, 0));   // default Sequential
+    params.push_back(std::make_unique<juce::AudioParameterInt>("arpPathLoopLen","Path Loop Len",2, 16, 4));
     params.push_back(std::make_unique<juce::AudioParameterBool>("arpPendulum",  "Arp Pendulum", false));
     params.push_back(std::make_unique<juce::AudioParameterInt>("arpRatchet",    "Arp Ratchet",  0, 16, 0));
     params.push_back(std::make_unique<juce::AudioParameterBool>("arpUseRandomization", "Arp Note Var", false));
@@ -89,6 +91,8 @@ void FurnitureProcessor::pullParametersFromAPVTS()
     persistentState.arpDivision  = static_cast<int>(*apvts.getRawParameterValue("arpDivision"));
     persistentState.arpRateMs    = static_cast<int>(*apvts.getRawParameterValue("arpRateMs"));
     persistentState.arpPlayMode  = static_cast<int>(*apvts.getRawParameterValue("arpPlayMode"));
+    persistentState.arpPath      = static_cast<int>(*apvts.getRawParameterValue("arpPath"));
+    persistentState.arpPathLoopLen = static_cast<int>(*apvts.getRawParameterValue("arpPathLoopLen"));
     persistentState.arpPendulum  = *apvts.getRawParameterValue("arpPendulum") > 0.5f;
     persistentState.arpRatchet   = static_cast<int>(*apvts.getRawParameterValue("arpRatchet"));
     persistentState.arpUseRandomization = *apvts.getRawParameterValue("arpUseRandomization") > 0.5f;
@@ -126,7 +130,21 @@ void FurnitureProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
 
     int numSamples = buffer.getNumSamples();
 
-    // Process pending note-offs
+    // Check host transport state
+    bool hostIsPlaying = true;
+    double bpm = 120.0;
+    if (auto* playHead = getPlayHead())
+    {
+        auto posInfo = playHead->getPosition();
+        if (posInfo.hasValue())
+        {
+            if (posInfo->getBpm().hasValue())
+                bpm = *posInfo->getBpm();
+            hostIsPlaying = posInfo->getIsPlaying();
+        }
+    }
+
+    // Process pending note-offs (always, even when stopped)
     for (auto it = pendingNoteOffs.begin(); it != pendingNoteOffs.end(); )
     {
         if (it->samplesRemaining <= numSamples)
@@ -149,7 +167,7 @@ void FurnitureProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
     {
         tickAccumulator -= samplesPerTick;
 
-        if (!transientState.running) continue;
+        if (!transientState.running || !hostIsPlaying) continue;
 
         auto events = physics.tick(persistentState, transientState, 1.0f);
 
@@ -172,17 +190,8 @@ void FurnitureProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
     }
 
     // --- Arpeggiator ---
-    if (persistentState.arpEnabled)
+    if (persistentState.arpEnabled && hostIsPlaying)
     {
-        // Get BPM from host transport, fallback to 120
-        double bpm = 120.0;
-        if (auto* playHead = getPlayHead())
-        {
-            auto posInfo = playHead->getPosition();
-            if (posInfo.hasValue() && posInfo->getBpm().hasValue())
-                bpm = *posInfo->getBpm();
-        }
-
         auto arpEvents = arp.processBlock(persistentState, transientState,
                                            numSamples, bpm, currentSampleRate);
 

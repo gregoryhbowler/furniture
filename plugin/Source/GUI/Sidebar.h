@@ -116,6 +116,11 @@ private:
     juce::Label arpPlayModeLabel;
     juce::ComboBox arpPlayModeBox;
 
+    juce::Label arpPathLabel;
+    juce::ComboBox arpPathBox;
+
+    ParamRow arpPathLoopLen;
+
     juce::Label arpPendulumLabel;
     juce::ToggleButton arpPendulumBtn;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> arpPendulumAtt;

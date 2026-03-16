@@ -108,8 +108,8 @@ FurnitureEditor::FurnitureEditor(FurnitureProcessor& p)
         }
     };
 
-    // Set sidebar height for scrolling
-    sidebar.setSize(SIDEBAR_WIDTH - 12, 1200);
+    // Initial size — sidebar will self-size in resized()
+    sidebar.setSize(SIDEBAR_WIDTH - 12, 800);
 }
 
 FurnitureEditor::~FurnitureEditor() {}
